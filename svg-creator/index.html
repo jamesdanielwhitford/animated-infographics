@@ -9,7 +9,16 @@
 <body>
     <div class="header">
         <div class="title">SVG Animation Creator</div>
-        <button class="export-btn" onclick="exportAnimation()">Export SVG</button>
+        <div class="export-controls">
+            <label for="animSpeed">Animation Speed:</label>
+            <select id="animSpeed">
+                <option value="1">1x (3s per frame)</option>
+                <option value="0.5">0.5x (6s per frame)</option>
+                <option value="2" selected>2x (1.5s per frame)</option>
+                <option value="4">4x (0.75s per frame)</option>
+            </select>
+            <button class="export-btn" onclick="exportAnimation()">Export SVG</button>
+        </div>
     </div>
     
     <div class="frame-toolbar">

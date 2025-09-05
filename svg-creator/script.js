@@ -456,7 +456,8 @@ function generateAnimations() {
     if (frames.length < 2) return [];
 
     const animations = [];
-    const frameDuration = 3000;
+    const speedMultiplier = parseFloat(document.getElementById('animSpeed')?.value || 2);
+    const frameDuration = 3000 / speedMultiplier;
 
     for (let i = 1; i < frames.length; i++) {
         const changes = compareFrames(frames[i - 1], frames[i]);
@@ -505,7 +506,13 @@ function createAnimatedSVG() {
     const svgWidth = 800;
     const svgHeight = 600;
 
-    let svgContent = `<svg width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">`;
+    // Create a temporary SVG using D3 for cleaner generation
+    const tempContainer = d3.select('body').append('div').style('display', 'none');
+    const tempSVG = tempContainer.append('svg')
+        .attr('width', svgWidth)
+        .attr('height', svgHeight)
+        .attr('viewBox', `0 0 ${svgWidth} ${svgHeight}`)
+        .attr('xmlns', 'http://www.w3.org/2000/svg');
     
     const animations = generateAnimations();
     const allElements = new Map();
@@ -531,83 +538,115 @@ function createAnimatedSVG() {
         });
     });
 
+    // Use D3 to create clean SVG elements
     allElements.forEach(element => {
         const elementAnimations = animations.filter(anim => anim.elementId === element.id);
         const nodeToUse = element.node || element;
-        if (!nodeToUse || !nodeToUse.outerHTML) return;
+        if (!nodeToUse) return;
         
-        // Ensure element has valid position before proceeding
-        const currentPos = getElementPosition(element);
-        if (currentPos.x === 0 && currentPos.y === 0 && element.originalPosition) {
-            console.warn('Element position seems invalid, using original position:', {
-                elementId: element.id,
-                currentPos,
-                originalPos: element.originalPosition
-            });
+        let svgElement;
+        
+        // Create element using D3 for cleaner output
+        switch(nodeToUse.tagName) {
+            case 'circle':
+                svgElement = tempSVG.append('circle');
+                break;
+            case 'rect':
+                svgElement = tempSVG.append('rect');
+                break;
+            case 'text':
+                svgElement = tempSVG.append('text');
+                break;
+            case 'path':
+                svgElement = tempSVG.append('path');
+                break;
+            default:
+                return;
         }
         
-        let elementSVG;
-        
-        // Handle text elements specially to avoid HTML encoding issues
-        if (nodeToUse.tagName === 'text') {
-            const attributes = [];
-            for (let attr of nodeToUse.attributes) {
-                if (attr.name !== 'class') {
-                    attributes.push(`${attr.name}="${attr.value}"`);
-                }
+        // Copy all attributes except class
+        for (let attr of nodeToUse.attributes) {
+            if (attr.name !== 'class') {
+                svgElement.attr(attr.name, attr.value);
             }
-            const textContent = nodeToUse.textContent || '';
-            elementSVG = `<text ${attributes.join(' ')}>${textContent}</text>`;
-        } else {
-            elementSVG = nodeToUse.outerHTML.replace(/class="[^"]*"/g, '');
+        }
+        
+        // Handle text content
+        if (nodeToUse.tagName === 'text') {
+            svgElement.text(nodeToUse.textContent || '');
         }
         
         // Add initial opacity if element doesn't start in frame 0
         const hasFadeInAnimation = elementAnimations.some(anim => anim.type === 'fadeIn');
         if (element.firstFrameIndex > 0 && hasFadeInAnimation) {
-            // Set initial opacity to 0, will be animated to 1 by fadeIn animation
-            elementSVG = elementSVG.replace(/(<[^>]+)/, '$1 opacity="0"');
+            svgElement.attr('opacity', 0);
         }
         
-        // Add animations container if there are animations
-        if (elementAnimations.length > 0) {
-            const closingTag = elementSVG.match(/<\/[^>]+>$/);
-            const openingTag = elementSVG.replace(closingTag ? closingTag[0] : /\/>$/, '');
-            
-            let animationsHTML = '';
-            
-            // Remove this conflicting logic - let generateAnimations() handle all timing
-            
-            elementAnimations.forEach(anim => {
-                if (anim.type === 'fadeIn') {
-                    animationsHTML += `<animate attributeName="opacity" values="0;1" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                } else if (anim.type === 'fadeOut') {
-                    animationsHTML += `<animate attributeName="opacity" values="1;0" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                } else if (anim.type === 'move') {
-                    if (element.node.tagName === 'circle') {
-                        animationsHTML += `<animate attributeName="cx" values="${anim.fromPos.x};${anim.toPos.x}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                        animationsHTML += `<animate attributeName="cy" values="${anim.fromPos.y};${anim.toPos.y}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                    } else if (element.node.tagName === 'rect') {
-                        animationsHTML += `<animate attributeName="x" values="${anim.fromPos.x};${anim.toPos.x}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                        animationsHTML += `<animate attributeName="y" values="${anim.fromPos.y};${anim.toPos.y}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                    } else if (element.node.tagName === 'text') {
-                        animationsHTML += `<animate attributeName="x" values="${anim.fromPos.x};${anim.toPos.x}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                        animationsHTML += `<animate attributeName="y" values="${anim.fromPos.y};${anim.toPos.y}" dur="${anim.duration}ms" begin="${anim.startTime}ms" fill="freeze"/>`;
-                    }
+        // Add SVG animations
+        elementAnimations.forEach(anim => {
+            if (anim.type === 'fadeIn') {
+                svgElement.append('animate')
+                    .attr('attributeName', 'opacity')
+                    .attr('values', '0;1')
+                    .attr('dur', `${anim.duration}ms`)
+                    .attr('begin', `${anim.startTime}ms`)
+                    .attr('fill', 'freeze');
+            } else if (anim.type === 'fadeOut') {
+                svgElement.append('animate')
+                    .attr('attributeName', 'opacity')
+                    .attr('values', '1;0')
+                    .attr('dur', `${anim.duration}ms`)
+                    .attr('begin', `${anim.startTime}ms`)
+                    .attr('fill', 'freeze');
+            } else if (anim.type === 'move') {
+                if (nodeToUse.tagName === 'circle') {
+                    svgElement.append('animate')
+                        .attr('attributeName', 'cx')
+                        .attr('values', `${anim.fromPos.x};${anim.toPos.x}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
+                    svgElement.append('animate')
+                        .attr('attributeName', 'cy')
+                        .attr('values', `${anim.fromPos.y};${anim.toPos.y}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
+                } else if (nodeToUse.tagName === 'rect') {
+                    svgElement.append('animate')
+                        .attr('attributeName', 'x')
+                        .attr('values', `${anim.fromPos.x};${anim.toPos.x}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
+                    svgElement.append('animate')
+                        .attr('attributeName', 'y')
+                        .attr('values', `${anim.fromPos.y};${anim.toPos.y}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
+                } else if (nodeToUse.tagName === 'text') {
+                    svgElement.append('animate')
+                        .attr('attributeName', 'x')
+                        .attr('values', `${anim.fromPos.x};${anim.toPos.x}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
+                    svgElement.append('animate')
+                        .attr('attributeName', 'y')
+                        .attr('values', `${anim.fromPos.y};${anim.toPos.y}`)
+                        .attr('dur', `${anim.duration}ms`)
+                        .attr('begin', `${anim.startTime}ms`)
+                        .attr('fill', 'freeze');
                 }
-            });
-
-            if (closingTag) {
-                elementSVG = openingTag + '>' + animationsHTML + closingTag[0];
-            } else {
-                elementSVG = openingTag + '>' + animationsHTML + '</' + element.node.tagName + '>';
             }
-        }
-
-        svgContent += elementSVG;
+        });
     });
 
-    svgContent += '</svg>';
+    // Get the clean SVG content and cleanup
+    const svgContent = tempSVG.node().outerHTML;
+    tempContainer.remove();
+    
     return svgContent;
 }
 
