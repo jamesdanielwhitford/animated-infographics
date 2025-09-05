@@ -136,60 +136,59 @@ function createSVGElement(shape, x, y) {
 }
 
 function makeDraggable(element) {
-    let isDragging = false;
-    let startPos = { x: 0, y: 0 };
-    
-    element.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        const rect = document.getElementById('canvas').getBoundingClientRect();
-        startPos.x = e.clientX - rect.left;
-        startPos.y = e.clientY - rect.top;
-        e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        const rect = document.getElementById('canvas').getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        const dx = x - startPos.x;
-        const dy = y - startPos.y;
-        
-        if (element.tagName === 'circle') {
-            const cx = parseFloat(element.getAttribute('cx')) + dx;
-            const cy = parseFloat(element.getAttribute('cy')) + dy;
-            element.setAttribute('cx', cx);
-            element.setAttribute('cy', cy);
-        } else if (element.tagName === 'rect') {
-            const rectX = parseFloat(element.getAttribute('x')) + dx;
-            const rectY = parseFloat(element.getAttribute('y')) + dy;
-            element.setAttribute('x', rectX);
-            element.setAttribute('y', rectY);
-        } else if (element.tagName === 'text') {
-            const textX = parseFloat(element.getAttribute('x')) + dx;
-            const textY = parseFloat(element.getAttribute('y')) + dy;
-            element.setAttribute('x', textX);
-            element.setAttribute('y', textY);
-        } else if (element.tagName === 'path') {
-            const path = element.getAttribute('d');
-            const newPath = path.replace(/(\d+\.?\d*)/g, (match, number) => {
-                return parseFloat(number) + (match.includes('M') || match.includes('L') ? dx : dy);
-            });
-            element.setAttribute('d', newPath);
-        }
-        
-        startPos.x = x;
-        startPos.y = y;
-    });
-    
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
+    // Use D3's drag behavior for smoother dragging
+    const dragBehavior = d3.drag()
+        .on('start', function(event) {
+            // Change cursor and add visual feedback
+            d3.select(this).style('cursor', 'grabbing');
+        })
+        .on('drag', function(event) {
+            const element = this;
+            const dx = event.dx;
+            const dy = event.dy;
+            
+            // Update element position based on type
+            if (element.tagName === 'circle') {
+                const cx = parseFloat(element.getAttribute('cx')) + dx;
+                const cy = parseFloat(element.getAttribute('cy')) + dy;
+                d3.select(element)
+                    .attr('cx', cx)
+                    .attr('cy', cy);
+            } else if (element.tagName === 'rect') {
+                const x = parseFloat(element.getAttribute('x')) + dx;
+                const y = parseFloat(element.getAttribute('y')) + dy;
+                d3.select(element)
+                    .attr('x', x)
+                    .attr('y', y);
+            } else if (element.tagName === 'text') {
+                const x = parseFloat(element.getAttribute('x')) + dx;
+                const y = parseFloat(element.getAttribute('y')) + dy;
+                d3.select(element)
+                    .attr('x', x)
+                    .attr('y', y);
+            } else if (element.tagName === 'path') {
+                // Handle path dragging by updating all coordinates
+                const path = element.getAttribute('d');
+                const newPath = path.replace(/([ML])\s*([0-9.-]+)\s+([0-9.-]+)/g, (match, command, x, y) => {
+                    return `${command} ${parseFloat(x) + dx} ${parseFloat(y) + dy}`;
+                });
+                d3.select(element).attr('d', newPath);
+            }
+        })
+        .on('end', function(event) {
+            // Reset cursor and add subtle settle animation
+            d3.select(this)
+                .style('cursor', 'grab')
+                .transition()
+                .duration(150)
+                .ease(d3.easeBackOut.overshoot(1.2))
+                .attr('transform', 'scale(1)'); // Subtle settle effect
+            
             updateFrameElements();
-        }
-        isDragging = false;
-    });
+        });
+    
+    // Apply drag behavior to the element
+    d3.select(element).call(dragBehavior);
 }
 
 function updateFrameElements() {
