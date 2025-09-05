@@ -546,7 +546,21 @@ function createAnimatedSVG() {
             });
         }
         
-        let elementSVG = nodeToUse.outerHTML.replace(/class="[^"]*"/g, '');
+        let elementSVG;
+        
+        // Handle text elements specially to avoid HTML encoding issues
+        if (nodeToUse.tagName === 'text') {
+            const attributes = [];
+            for (let attr of nodeToUse.attributes) {
+                if (attr.name !== 'class') {
+                    attributes.push(`${attr.name}="${attr.value}"`);
+                }
+            }
+            const textContent = nodeToUse.textContent || '';
+            elementSVG = `<text ${attributes.join(' ')}>${textContent}</text>`;
+        } else {
+            elementSVG = nodeToUse.outerHTML.replace(/class="[^"]*"/g, '');
+        }
         
         // Add initial opacity if element doesn't start in frame 0
         const hasFadeInAnimation = elementAnimations.some(anim => anim.type === 'fadeIn');
