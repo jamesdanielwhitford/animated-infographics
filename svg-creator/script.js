@@ -486,4 +486,44 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     renderCanvas();
+    
+    // D3.js Test - Add a test circle to verify D3 is working
+    testD3Integration();
 });
+
+// D3.js Integration Test
+function testD3Integration() {
+    // Test if D3 is loaded
+    if (typeof d3 === 'undefined') {
+        console.error('D3.js not loaded!');
+        return;
+    }
+    
+    console.log('D3.js loaded successfully! Version:', d3.version);
+    
+    // Create a test circle using D3 in top-right corner
+    const svg = d3.select('#canvas');
+    
+    // Add a test circle that fades in to verify D3 transitions work
+    svg.append('circle')
+        .attr('cx', 750)
+        .attr('cy', 50)
+        .attr('r', 20)
+        .attr('fill', '#ff6b6b')
+        .attr('stroke', '#ff5252')
+        .attr('stroke-width', 2)
+        .attr('opacity', 0)
+        .transition()
+        .duration(2000)
+        .attr('opacity', 0.8);
+        
+    // Add test label
+    svg.append('text')
+        .attr('x', 750)
+        .attr('y', 85)
+        .attr('text-anchor', 'middle')
+        .attr('font-family', 'Arial, sans-serif')
+        .attr('font-size', '12px')
+        .attr('fill', '#666')
+        .text('D3 Test');
+}
