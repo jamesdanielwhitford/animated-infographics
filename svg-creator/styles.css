@@ -79,6 +79,27 @@ body {
     background: #218838;
 }
 
+.play-animation-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    margin-left: 12px;
+}
+
+.play-animation-btn:hover {
+    background: #0056b3;
+}
+
+.play-animation-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
 .main-content {
     flex: 1;
     display: flex;

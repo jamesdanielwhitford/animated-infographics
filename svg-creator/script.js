@@ -36,13 +36,15 @@ function switchToFrame(frameIndex) {
     renderCanvas();
 }
 
-function renderCanvas() {
+function renderCanvas(animate = false) {
     const svg = d3.select('#canvas');
     
-    // Clear all draggable elements first to avoid conflicts
-    svg.selectAll('.draggable').remove();
-    
     const currentElements = frames[currentFrame].elements;
+    
+    if (!animate) {
+        // Clear all draggable elements first for instant switching
+        svg.selectAll('.draggable').remove();
+    }
     
     // Convert frame elements to D3-friendly data format
     const elementsData = currentElements.map(element => {
@@ -74,44 +76,113 @@ function renderCanvas() {
         return elementData;
     }).filter(Boolean); // Remove null entries
     
-    // Create all elements fresh (simpler than complex data joins for frame switching)
-    elementsData.forEach(d => {
-        let element;
+    if (animate) {
+        // Use D3 data joins for smooth transitions between frames
+        const elements = svg.selectAll('.draggable')
+            .data(elementsData, d => d.id);
         
-        // Create element based on type
-        switch(d.tagName) {
-            case 'circle':
-                element = svg.append('circle');
-                break;
-            case 'rect':
-                element = svg.append('rect');
-                break;
-            case 'text':
-                element = svg.append('text');
-                break;
-            case 'path':
-                element = svg.append('path');
-                break;
-        }
+        // Remove elements that no longer exist with fade out
+        elements.exit()
+            .transition()
+            .duration(500)
+            .attr('opacity', 0)
+            .remove();
         
-        // Apply all attributes
-        Object.entries(d.attributes).forEach(([key, value]) => {
-            element.attr(key, value);
+        // Add new elements with fade in
+        const enterSelection = elements.enter();
+        enterSelection.each(function(d) {
+            let element;
+            
+            switch(d.tagName) {
+                case 'circle':
+                    element = svg.append('circle');
+                    break;
+                case 'rect':
+                    element = svg.append('rect');
+                    break;
+                case 'text':
+                    element = svg.append('text');
+                    break;
+                case 'path':
+                    element = svg.append('path');
+                    break;
+            }
+            
+            // Apply all attributes
+            Object.entries(d.attributes).forEach(([key, value]) => {
+                element.attr(key, value);
+            });
+            
+            if (d.textContent) {
+                element.text(d.textContent);
+            }
+            
+            element
+                .classed('draggable', true)
+                .datum(d)
+                .attr('opacity', 0)
+                .transition()
+                .duration(500)
+                .attr('opacity', 1);
+                
+            makeDraggable(element.node());
         });
         
-        // Handle text content
-        if (d.textContent) {
-            element.text(d.textContent);
-        }
-        
-        // Apply classes and make draggable
-        element
-            .classed('draggable', true)
-            .datum(d);
+        // Update existing elements with smooth transitions
+        elements.each(function(d) {
+            const element = d3.select(this);
+            const transition = element.transition().duration(800).ease(d3.easeQuadInOut);
             
-        // Apply drag behavior
-        makeDraggable(element.node());
-    });
+            // Animate position changes
+            Object.entries(d.attributes).forEach(([key, value]) => {
+                transition.attr(key, value);
+            });
+            
+            if (d.textContent) {
+                element.text(d.textContent);
+            }
+        });
+        
+    } else {
+        // Create all elements fresh for instant switching
+        elementsData.forEach(d => {
+            let element;
+            
+            // Create element based on type
+            switch(d.tagName) {
+                case 'circle':
+                    element = svg.append('circle');
+                    break;
+                case 'rect':
+                    element = svg.append('rect');
+                    break;
+                case 'text':
+                    element = svg.append('text');
+                    break;
+                case 'path':
+                    element = svg.append('path');
+                    break;
+            }
+            
+            // Apply all attributes
+            Object.entries(d.attributes).forEach(([key, value]) => {
+                element.attr(key, value);
+            });
+            
+            // Handle text content
+            if (d.textContent) {
+                element.text(d.textContent);
+            }
+            
+            // Apply classes and make draggable
+            element
+                .classed('draggable', true)
+                .datum(d);
+                
+            // Apply drag behavior
+            makeDraggable(element.node());
+        });
+    }
 }
 
 function createSVGElement(shape, x, y) {
@@ -576,3 +647,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     renderCanvas();
 });
+
+// Animation playback functionality
+function playAnimation() {
+    if (frames.length < 2) {
+        alert('Create at least 2 frames to play animation!');
+        return;
+    }
+    
+    const playBtn = document.querySelector('.play-animation-btn');
+    playBtn.disabled = true;
+    playBtn.textContent = '⏸ Playing...';
+    
+    let frameIndex = 0;
+    const frameDuration = 2000; // 2 seconds per frame
+    
+    function playNextFrame() {
+        // Update frame tab indicator
+        document.querySelectorAll('.frame-tab').forEach((tab, index) => {
+            tab.classList.toggle('active', index === frameIndex);
+        });
+        
+        currentFrame = frameIndex;
+        renderCanvas(true); // Animate transitions
+        
+        frameIndex++;
+        
+        if (frameIndex < frames.length) {
+            setTimeout(playNextFrame, frameDuration);
+        } else {
+            // Animation finished
+            playBtn.disabled = false;
+            playBtn.textContent = '▶ Play Animation';
+        }
+    }
+    
+    playNextFrame();
+}
