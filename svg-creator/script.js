@@ -49,68 +49,87 @@ function renderCanvas() {
 }
 
 function createSVGElement(shape, x, y) {
-    let element;
     const id = `element_${elementCounter++}`;
+    const svg = d3.select('#canvas');
+    let d3Element;
+    
+    // Create element data object for D3 binding
+    const elementData = { id, shape, x, y };
     
     switch(shape) {
         case 'circle':
-            element = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            element.setAttribute('cx', x);
-            element.setAttribute('cy', y);
-            element.setAttribute('r', '30');
-            element.setAttribute('fill', '#007bff');
-            element.setAttribute('stroke', '#0056b3');
-            element.setAttribute('stroke-width', '2');
+            d3Element = svg.append('circle')
+                .datum(elementData)
+                .attr('id', id)
+                .attr('cx', x)
+                .attr('cy', y)
+                .attr('r', 30)
+                .attr('fill', '#007bff')
+                .attr('stroke', '#0056b3')
+                .attr('stroke-width', 2)
+                .classed('draggable', true);
             break;
             
         case 'rectangle':
-            element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            element.setAttribute('x', x - 40);
-            element.setAttribute('y', y - 25);
-            element.setAttribute('width', '80');
-            element.setAttribute('height', '50');
-            element.setAttribute('fill', '#28a745');
-            element.setAttribute('stroke', '#1e7e34');
-            element.setAttribute('stroke-width', '2');
-            element.setAttribute('rx', '4');
+            d3Element = svg.append('rect')
+                .datum(elementData)
+                .attr('id', id)
+                .attr('x', x - 40)
+                .attr('y', y - 25)
+                .attr('width', 80)
+                .attr('height', 50)
+                .attr('fill', '#28a745')
+                .attr('stroke', '#1e7e34')
+                .attr('stroke-width', 2)
+                .attr('rx', 4)
+                .classed('draggable', true);
             break;
             
         case 'text':
-            element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            element.setAttribute('x', x);
-            element.setAttribute('y', y);
-            element.setAttribute('text-anchor', 'middle');
-            element.setAttribute('dominant-baseline', 'middle');
-            element.setAttribute('fill', '#333');
-            element.setAttribute('font-family', 'Arial, sans-serif');
-            element.setAttribute('font-size', '16');
-            element.textContent = 'Sample Text';
+            d3Element = svg.append('text')
+                .datum(elementData)
+                .attr('id', id)
+                .attr('x', x)
+                .attr('y', y)
+                .attr('text-anchor', 'middle')
+                .attr('dominant-baseline', 'middle')
+                .attr('fill', '#333')
+                .attr('font-family', 'Arial, sans-serif')
+                .attr('font-size', 16)
+                .text('Sample Text')
+                .classed('draggable', true);
             break;
             
         case 'arrow':
-            element = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            element.setAttribute('d', `M ${x-40} ${y} L ${x+40} ${y} M ${x+30} ${y-10} L ${x+40} ${y} L ${x+30} ${y+10}`);
-            element.setAttribute('stroke', '#dc3545');
-            element.setAttribute('stroke-width', '3');
-            element.setAttribute('fill', 'none');
-            element.setAttribute('stroke-linecap', 'round');
+            d3Element = svg.append('path')
+                .datum(elementData)
+                .attr('id', id)
+                .attr('d', `M ${x-40} ${y} L ${x+40} ${y} M ${x+30} ${y-10} L ${x+40} ${y} L ${x+30} ${y+10}`)
+                .attr('stroke', '#dc3545')
+                .attr('stroke-width', 3)
+                .attr('fill', 'none')
+                .attr('stroke-linecap', 'round')
+                .classed('draggable', true);
             break;
             
         case 'box':
-            element = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            element.setAttribute('x', x - 60);
-            element.setAttribute('y', y - 30);
-            element.setAttribute('width', '120');
-            element.setAttribute('height', '60');
-            element.setAttribute('fill', '#6f42c1');
-            element.setAttribute('stroke', '#5a32a3');
-            element.setAttribute('stroke-width', '2');
-            element.setAttribute('rx', '8');
+            d3Element = svg.append('rect')
+                .datum(elementData)
+                .attr('id', id)
+                .attr('x', x - 60)
+                .attr('y', y - 30)
+                .attr('width', 120)
+                .attr('height', 60)
+                .attr('fill', '#6f42c1')
+                .attr('stroke', '#5a32a3')
+                .attr('stroke-width', 2)
+                .attr('rx', 8)
+                .classed('draggable', true);
             break;
     }
     
-    element.setAttribute('id', id);
-    element.classList.add('draggable');
+    // Get the DOM node to maintain compatibility with existing code
+    const element = d3Element.node();
     makeDraggable(element);
     
     return { id, node: element, shape };
