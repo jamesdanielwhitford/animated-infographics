@@ -1,0 +1,167 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f5f5f5;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+}
+
+.frame-toolbar {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 60px;
+}
+
+.frame-tab {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    text-align: center;
+}
+
+.frame-tab.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.frame-tab:hover:not(.active) {
+    background: #e9ecef;
+}
+
+.add-frame-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.add-frame-btn:hover {
+    background: #218838;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    background: #f5f5f5;
+}
+
+.canvas-area {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.svg-canvas {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 800px;
+    height: 600px;
+}
+
+.export-btn {
+    background: #6f42c1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.export-btn:hover {
+    background: #5a32a3;
+}
+
+.tools-panel {
+    width: 250px;
+    background: white;
+    border-left: 1px solid #ddd;
+    padding: 20px;
+}
+
+.tool-section {
+    margin-bottom: 24px;
+}
+
+.tool-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.svg-element {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    cursor: grab;
+    font-size: 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.svg-element:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+}
+
+.svg-element:active {
+    cursor: grabbing;
+}
+
+.draggable { 
+    cursor: grab; 
+}
+
+.draggable:active { 
+    cursor: grabbing; 
+}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Animation Creator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="title">SVG Animation Creator</div>
+        <button class="export-btn" onclick="exportAnimation()">Export SVG</button>
+    </div>
+    
+    <div class="frame-toolbar">
+        <div class="frame-tab active" data-frame="0">Frame 1</div>
+        <button class="add-frame-btn" onclick="addNewFrame()">+</button>
+    </div>
+    
+    <div class="main-content">
+        <div class="canvas-area">
+            <svg class="svg-canvas" id="canvas" viewBox="0 0 800 600">
+                <defs>
+                    <style>
+                        .draggable { cursor: grab; }
+                        .draggable:active { cursor: grabbing; }
+                    </style>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="tools-panel">
+            <div class="tool-section">
+                <h3>Basic Shapes</h3>
+                <div class="svg-element" draggable="true" data-shape="circle">Circle</div>
+                <div class="svg-element" draggable="true" data-shape="rectangle">Rectangle</div>
+                <div class="svg-element" draggable="true" data-shape="text">Text</div>
+            </div>
+            
+            <div class="tool-section">
+                <h3>Diagram Elements</h3>
+                <div class="svg-element" draggable="true" data-shape="arrow">Arrow</div>
+                <div class="svg-element" draggable="true" data-shape="box">Process Box</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
